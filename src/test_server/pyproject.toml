@@ -1,0 +1,13 @@
+[project]
+name = "test-server"
+version = "0.1.0"
+description = "Internal demo consumer of transparent-fastapi — the FastAPI app baked into the local docker stack."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "transparent-fastapi",
+    "uvicorn[standard]>=0.32",
+]
+
+[tool.uv.sources]
+transparent-fastapi = { workspace = true }
