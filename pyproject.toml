@@ -30,8 +30,15 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Topic :: System :: Monitoring",
+  "Typing :: Typed",
 ]
 dependencies = ["fastapi>=0.75", "prometheus-client>=0.20"]
+
+[project.urls]
+Homepage = "https://github.com/Ashish-Github193/transparent-fastapi"
+Source = "https://github.com/Ashish-Github193/transparent-fastapi"
+Issues = "https://github.com/Ashish-Github193/transparent-fastapi/issues"
+Changelog = "https://github.com/Ashish-Github193/transparent-fastapi/blob/master/CHANGELOG.md"
 
 [dependency-groups]
 dev = [
@@ -46,6 +53,16 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/transparent_fastapi"]
+exclude = ["**/CLAUDE.md"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "**/CLAUDE.md",
+  ".claude",
+  ".github",
+  ".mcp.json",
+  ".python-version",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
