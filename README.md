@@ -95,6 +95,13 @@ time() - process_start_time_seconds
 - **Methods** are allowlisted (GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS); anything else becomes `OTHER`.
 - **Status** is the full numeric code (`"200"`, `"404"`); fine-grained enough for "alert when 401 spikes vs 500 spikes" without exploding cardinality.
 
+## Limitations
+
+`FastAPI(root_path=...)` and `app.include_router(router, prefix=...)` are handled correctly — both produce clean, prefixed templates in the `route` label. A couple of `app.mount(...)` cases are worth knowing about:
+
+- **`StaticFiles` (and any Starlette `Mount`) records as `route="<unmatched>"`.** Starlette's `Mount` doesn't populate `request.scope["route"]` the way FastAPI's `APIRoute` does, so static-file requests share a single series with unmatched paths (port scans, typos). This is a feature for cardinality — a 100k-asset directory can't explode the time series — but it does mean static traffic isn't separately observable here. Per-asset metrics belong at the CDN / edge proxy.
+- **Mounted FastAPI sub-applications share series with top-level routes.** `app.mount("/api", sub_app)` records traffic as `route="/users/{user_id}"`, *without* the `/api` prefix. This is fine when you have one mount; two mounts of the same sub-app at different paths would collide on the same series. Prefer `app.include_router(router, prefix="/api")` for FastAPI-internal composition — its templates are baked with the prefix and stay distinct.
+
 ## Local demo stack
 
 `deploy/local/` ships a docker-compose stack (app + Prometheus + Grafana). All paths in the compose file are relative to it, so compose can be invoked directly from the project root:
