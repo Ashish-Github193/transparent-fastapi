@@ -7,9 +7,10 @@ http_request_duration_seconds under load.
 """
 
 import asyncio
+import random
 import time
 from typing import Annotated
-import random
+
 from fastapi import BackgroundTasks, FastAPI, Query
 
 from transparent_fastapi import install

@@ -1,5 +1,7 @@
 """Smoke tests for transparent-fastapi.install()."""
 
+import re
+
 from fastapi import BackgroundTasks, FastAPI
 from fastapi.testclient import TestClient
 
@@ -108,3 +110,52 @@ def test_install_is_idempotent_for_background_patch() -> None:
     from starlette.background import BackgroundTasks as _BT
 
     assert getattr(_BT.add_task, "_observability_wrapped", False) is True
+
+
+def test_cardinality_stays_bounded_under_adversarial_traffic() -> None:
+    # The library's whole pitch: hostile inputs (random path-param values,
+    # scanner probes, exotic verbs) must not grow the route or method label
+    # space beyond declared templates + sentinels.
+    client = TestClient(_build_app())
+
+    for i in range(200):
+        client.get(f"/items/{i}")
+
+    for i in range(200):
+        client.get(f"/scanner/probe/{i}")
+
+    for verb in ("PROPFIND", "PURGE", "MKCOL", "COPY", "MOVE"):
+        client.request(verb, "/hello")
+
+    body = client.get("/metrics").text
+    routes = set(
+        re.findall(r'http_requests_total\{[^}]*route="([^"]*)"', body)
+    )
+    methods = set(
+        re.findall(r'http_requests_total\{[^}]*method="([^"]*)"', body)
+    )
+
+    # Hard upper bound: 405 distinct adversarial inputs should not balloon the
+    # route label space. Other tests in this file legitimately register a
+    # handful of routes, so we allow slack but cap well below 405.
+    assert len(routes) < 15, f"route cardinality blew up: {len(routes)} -> {routes}"
+
+    raw_leaks = {
+        r for r in routes
+        if (r.startswith("/items/") and r != "/items/{item_id}")
+        or r.startswith("/scanner/")
+    }
+    assert not raw_leaks, f"raw paths leaked into route label: {raw_leaks}"
+
+    allowed_methods = {
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "HEAD",
+        "OPTIONS",
+        "OTHER",
+    }
+    extra_methods = methods - allowed_methods
+    assert not extra_methods, f"unexpected method labels: {extra_methods}"
