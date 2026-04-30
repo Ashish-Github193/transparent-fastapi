@@ -31,7 +31,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: System :: Monitoring",
 ]
-dependencies = ["fastapi>=0.115", "prometheus-client>=0.20"]
+dependencies = ["fastapi>=0.75", "prometheus-client>=0.20"]
 
 [dependency-groups]
 dev = [

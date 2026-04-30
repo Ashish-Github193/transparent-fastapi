@@ -53,7 +53,7 @@ jobs:
       matrix:
         include:
           - name: fastapi-floor
-            spec: "fastapi==0.115.*"
+            spec: "fastapi==0.75.*"
             allow-fail: false
           - name: fastapi-latest
             spec: "fastapi"
