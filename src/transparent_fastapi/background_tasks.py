@@ -6,6 +6,11 @@ from typing import Any
 from prometheus_client import Counter, Histogram
 from starlette.background import BackgroundTasks
 
+background_task_scheduled_total = Counter(
+    "background_task_scheduled_total",
+    "Background tasks scheduled (BackgroundTasks.add_task calls), by mode.",
+    labelnames=["mode"],
+)
 background_task_total = Counter(
     "background_task_total",
     "Background tasks completed, labeled by execution mode and outcome.",
@@ -85,7 +90,12 @@ def install_patch() -> None:
     def instrumented_add_task(
         self: BackgroundTasks, func: Any, *args: Any, **kwargs: Any
     ) -> None:
-        wrapper = _wrap_async(func) if _is_async_callable(func) else _wrap_sync(func)
+        if _is_async_callable(func):
+            background_task_scheduled_total.labels(mode="async").inc()
+            wrapper = _wrap_async(func)
+        else:
+            background_task_scheduled_total.labels(mode="threadpool").inc()
+            wrapper = _wrap_sync(func)
         return original_add_task(self, wrapper, *args, **kwargs)
 
     instrumented_add_task._observability_wrapped = True  # type: ignore[attr-defined]

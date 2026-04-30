@@ -5,7 +5,7 @@
 The demo consumer of `transparent-fastapi`. **NOT part of the published library.** It exists to:
 
 1. Be the FastAPI app baked into the docker image at `Dockerfile`.
-2. Give locust something to point at via `deploy/local/scripts/deploy.sh load-async` / `load-sync`.
+2. Give locust something to point at via `deploy/local/scripts/deploy.sh load-medium` / `load-high`.
 
 Don't add library features by editing `app.py` here. Library code lives in `../transparent_fastapi/`.
 
@@ -19,6 +19,6 @@ The Dockerfile copies `app.py` to `/app/app.py` (flat, no nested package) and ru
 
 ## What endpoints should/shouldn't be here
 
-The two `/sleep-async` and `/sleep-sync` routes are deliberate: they're the headline demo of event-loop blocking vs non-blocking, used by the locust load profiles. `/health` is excluded from metrics by `install(app, excluded_paths=["/health"])` — that's the intended demonstration of the `excluded_paths` kwarg.
+The two `/sleep-async` and `/sleep-sync` routes are deliberate: they're the headline demo of event-loop blocking vs non-blocking. The locust profiles in `deploy/local/locustfile.py` (`MediumLoadUser` / `HighLoadUser` — both subclasses of `_BaseTrafficUser`, which holds the shared task weights) use `/sleep-async` but not `/sleep-sync` — `/sleep-sync` is kept around for ad-hoc curl demos of the loop-lag spike. `/health` is excluded from metrics by `install(app, excluded_paths=["/health"])` — that's the intended demonstration of the `excluded_paths` kwarg.
 
 If you want to demo a new library feature under load, add a route here. If you want to demo it in documentation, prefer the README.

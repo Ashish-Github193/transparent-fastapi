@@ -6,11 +6,10 @@ export APP_PORT="${APP_PORT:-8000}"
 export PROMETHEUS_PORT="${PROMETHEUS_PORT:-9090}"
 export GRAFANA_PORT="${GRAFANA_PORT:-3000}"
 
-# Default load profile for `deploy.sh load-async`
-export LOCUST_USERS="${LOCUST_USERS:-20}"
-export LOCUST_SPAWN_RATE="${LOCUST_SPAWN_RATE:-5}"
+# Medium load — steady-state, ~25 rps with 0.5–3s think time.
+export LOCUST_MEDIUM_USERS="${LOCUST_MEDIUM_USERS:-50}"
+export LOCUST_MEDIUM_SPAWN_RATE="${LOCUST_MEDIUM_SPAWN_RATE:-5}"
 
-# Sync demo intentionally low-concurrency — sync handler blocks the loop, so
-# high concurrency just queues forever instead of producing useful signal.
-export LOCUST_SYNC_USERS="${LOCUST_SYNC_USERS:-4}"
-export LOCUST_SYNC_SPAWN_RATE="${LOCUST_SYNC_SPAWN_RATE:-1}"
+# High load — same task ratios, 0.05–0.3s think time, ~570 rps with 100 users.
+export LOCUST_HIGH_USERS="${LOCUST_HIGH_USERS:-100}"
+export LOCUST_HIGH_SPAWN_RATE="${LOCUST_HIGH_SPAWN_RATE:-10}"

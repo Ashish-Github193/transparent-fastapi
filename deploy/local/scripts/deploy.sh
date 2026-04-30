@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Single entry point for the local demo stack.
 #
-#   ./deploy.sh up              start app + prometheus + grafana
+#   ./deploy.sh up                start app + prometheus + grafana
 #   ./deploy.sh down [--volumes]
 #   ./deploy.sh logs [service]
 #   ./deploy.sh status
-#   ./deploy.sh load-async      drive load via locust (non-blocking demo)
-#   ./deploy.sh load-sync       drive load via locust (event-loop-blocking demo)
+#   ./deploy.sh load-medium       drive realistic medium-load traffic via locust
+#   ./deploy.sh load-high         drive realistic high-load traffic via locust
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,13 +24,13 @@ Commands:
   down [--volumes]  stop the stack; pass --volumes to also wipe data
   logs [service]    tail logs (optionally for a single service)
   status            show whether app/prometheus/grafana are reachable
-  load-async        drive non-blocking load with AsyncSleepUser
-  load-sync         drive blocking load with SyncSleepUser
+  load-medium       drive realistic medium-load traffic via locust
+  load-high         drive realistic high-load traffic via locust
 
 Overridable env vars:
   APP_PORT, PROMETHEUS_PORT, GRAFANA_PORT
-  LOCUST_USERS, LOCUST_SPAWN_RATE
-  LOCUST_SYNC_USERS, LOCUST_SYNC_SPAWN_RATE
+  LOCUST_MEDIUM_USERS, LOCUST_MEDIUM_SPAWN_RATE
+  LOCUST_HIGH_USERS,   LOCUST_HIGH_SPAWN_RATE
 EOF
 }
 
@@ -46,7 +46,7 @@ cmd_up() {
   log "  prometheus: $PROMETHEUS_URL"
   log "  grafana:    $GRAFANA_URL  (admin/admin or anonymous Viewer)"
   log ""
-  log "drive load with:  $(basename "$0") load-async   (or load-sync)"
+  log "drive load with:  $(basename "$0") load-medium  (or load-high)"
 }
 
 cmd_down() {
@@ -80,30 +80,31 @@ cmd_status() {
   [ "$fail" -eq 0 ] || return 1
 }
 
-cmd_load_async() {
+cmd_load_medium() {
   resolve_locust
-  log "running AsyncSleepUser against $APP_URL ($LOCUST_USERS users, ${LOCUST_SPAWN_RATE}/s spawn)"
+  log "running MediumLoadUser against $APP_URL ($LOCUST_MEDIUM_USERS users, ${LOCUST_MEDIUM_SPAWN_RATE}/s spawn)"
+  log "(0.5–3s think time; populates every panel without driving collapse)"
   "$LOCUST" -f "$LOCUSTFILE" --host="$APP_URL" \
-    --headless -u "$LOCUST_USERS" -r "$LOCUST_SPAWN_RATE" \
-    AsyncSleepUser
+    --headless -u "$LOCUST_MEDIUM_USERS" -r "$LOCUST_MEDIUM_SPAWN_RATE" \
+    MediumLoadUser
 }
 
-cmd_load_sync() {
+cmd_load_high() {
   resolve_locust
-  log "running SyncSleepUser against $APP_URL ($LOCUST_SYNC_USERS users, ${LOCUST_SYNC_SPAWN_RATE}/s spawn)"
-  log "(low concurrency on purpose — sync blocks the loop; the goal is to *show* the lag spike, not crash the app)"
+  log "running HighLoadUser against $APP_URL ($LOCUST_HIGH_USERS users, ${LOCUST_HIGH_SPAWN_RATE}/s spawn)"
+  log "(same ratios as medium but 0.05–0.3s think time — drives visible threadpool & latency tail pressure)"
   "$LOCUST" -f "$LOCUSTFILE" --host="$APP_URL" \
-    --headless -u "$LOCUST_SYNC_USERS" -r "$LOCUST_SYNC_SPAWN_RATE" \
-    SyncSleepUser
+    --headless -u "$LOCUST_HIGH_USERS" -r "$LOCUST_HIGH_SPAWN_RATE" \
+    HighLoadUser
 }
 
 case "${1:-}" in
-  up)         cmd_up ;;
-  down)       shift; cmd_down "$@" ;;
-  logs)       shift; cmd_logs "$@" ;;
-  status)     cmd_status ;;
-  load-async) cmd_load_async ;;
-  load-sync)  cmd_load_sync ;;
+  up)              cmd_up ;;
+  down)            shift; cmd_down "$@" ;;
+  logs)            shift; cmd_logs "$@" ;;
+  status)          cmd_status ;;
+  load-medium)     cmd_load_medium ;;
+  load-high)       cmd_load_high ;;
   -h|--help|help|"") usage ;;
   *) err "unknown command: $1"; usage; exit 1 ;;
 esac

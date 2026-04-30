@@ -12,7 +12,7 @@ The library proper is `src/transparent_fastapi/`. Everything else exists to veri
 |---|---|
 | `src/transparent_fastapi/` | THE LIBRARY — published to PyPI as `transparent-fastapi` |
 | `src/test_server/` | workspace member; demo app baked into the docker image. **NOT shipped** |
-| `deploy/local/` | docker-compose stack (app + Prometheus + Grafana) + helper scripts |
+| `deploy/local/` | docker-compose stack (app + Prometheus + Grafana) + helper scripts. Also defines an on-demand `grafana-mcp` service under the `tools` profile, used by `.mcp.json` to give Claude Code Grafana access |
 | `tests/` | smoke tests guarding the public `install()` contract |
 
 uv workspace — `uv sync` from root installs both packages editable into one `.venv/`.
@@ -30,7 +30,7 @@ uv sync                                                          # set up venv
 .venv/bin/pytest                                                 # 6 smoke tests
 docker compose -f deploy/local/docker-compose.yml up -d --build  # demo stack
 deploy/local/scripts/deploy.sh status                            # health-check
-deploy/local/scripts/deploy.sh load-async                        # locust load
+deploy/local/scripts/deploy.sh load-medium                       # locust load (load-high for heavier)
 uv build                                                         # wheel + sdist
 ```
 

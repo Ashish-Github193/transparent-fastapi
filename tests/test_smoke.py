@@ -95,6 +95,8 @@ def test_background_task_metrics_via_route() -> None:
     body = client.get("/metrics").text
     assert 'background_task_total{mode="async",outcome="ok"}' in body
     assert 'background_task_total{mode="threadpool",outcome="ok"}' in body
+    assert 'background_task_scheduled_total{mode="async"}' in body
+    assert 'background_task_scheduled_total{mode="threadpool"}' in body
 
 
 def test_install_is_idempotent_for_background_patch() -> None:

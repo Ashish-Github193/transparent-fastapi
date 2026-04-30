@@ -42,8 +42,51 @@ install(
 | `event_loop_lag_seconds` | Gauge | — |
 | `threadpool_tokens` | Gauge | `state` ∈ {`total`, `borrowed`, `available`} |
 | `threadpool_tasks_waiting` | Gauge | — |
+| `background_task_scheduled_total` | Counter | `mode` ∈ {`async`, `threadpool`} |
 | `background_task_total` | Counter | `mode` ∈ {`async`, `threadpool`}, `outcome` ∈ {`ok`, `error`} |
 | `background_task_duration_seconds` | Histogram | `mode` |
+
+### Plus, free from `prometheus_client`'s default registry
+
+`prometheus_client` auto-registers a process collector and a Python collector. Because `transparent-fastapi`'s `/metrics` endpoint calls `generate_latest()` on the default registry, these are exposed too — you don't need to do anything:
+
+| Metric | Type | Labels | What it tells you |
+|---|---|---|---|
+| `process_cpu_seconds_total` | Counter | — | CPU time consumed; `rate()` → cores in use |
+| `process_resident_memory_bytes` | Gauge | — | RSS (physical memory) |
+| `process_virtual_memory_bytes` | Gauge | — | VSZ |
+| `process_open_fds` | Gauge | — | FDs in use; creep toward `process_max_fds` = leak |
+| `process_max_fds` | Gauge | — | Soft FD limit |
+| `process_start_time_seconds` | Gauge | — | Unix epoch of process start; `time() - this` = uptime |
+| `python_gc_collections_total` | Counter | `generation` ∈ {`0`, `1`, `2`} | GC collections; sustained gen-2 = long-lived churn |
+| `python_gc_objects_collected_total` | Counter | `generation` | Objects reclaimed per generation |
+| `python_gc_objects_uncollectable_total` | Counter | `generation` | Objects GC could not free (cycles with `__del__`) |
+| `python_info` | Info | `version`, `implementation`, `major`, `minor`, `patchlevel` | Python build details |
+
+## Useful queries
+
+```promql
+# Validation-failure rate by route — Pydantic 422s already live in the status label
+sum by (route) (rate(http_requests_total{status="422"}[5m]))
+
+# 5xx error ratio
+sum(rate(http_requests_total{status=~"5.."}[5m])) /
+  sum(rate(http_requests_total[5m]))
+
+# p95 latency by route
+histogram_quantile(0.95,
+  sum by (route, le) (rate(http_request_duration_seconds_bucket[5m])))
+
+# Threadpool saturation — non-zero means sync work is queuing
+sum(threadpool_tasks_waiting)
+
+# Background task backlog growth (positive = scheduling outpaces completion)
+sum(rate(background_task_scheduled_total[1m]))
+  - sum(rate(background_task_total[1m]))
+
+# Process uptime in seconds
+time() - process_start_time_seconds
+```
 
 ## Cardinality discipline
 
@@ -65,9 +108,9 @@ docker compose -f deploy/local/docker-compose.yml down            # add -v to wi
 For health checks and locust load profiles there's a small wrapper script under `deploy/local/scripts/`:
 
 ```bash
-deploy/local/scripts/deploy.sh status       # curl all three services
-deploy/local/scripts/deploy.sh load-async   # AsyncSleepUser (non-blocking demo)
-deploy/local/scripts/deploy.sh load-sync    # SyncSleepUser (event-loop-blocking demo)
+deploy/local/scripts/deploy.sh status        # curl all three services
+deploy/local/scripts/deploy.sh load-medium   # realistic medium-load profile via locust
+deploy/local/scripts/deploy.sh load-high     # realistic high-load profile (same ratios)
 ```
 
 `deploy.sh up`, `down`, and `logs` are also there as thin shortcuts over the compose commands above — pick whichever you prefer.

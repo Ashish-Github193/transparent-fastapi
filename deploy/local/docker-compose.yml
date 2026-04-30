@@ -44,6 +44,17 @@ services:
       - prometheus
     restart: unless-stopped
 
+  grafana-mcp:
+    image: mcp/grafana@sha256:a91519a83ede741a287eab366da14b3e31ec7c2cd9c40c2beecf8e01ed46ebf0
+    profiles: ["tools"]
+    environment:
+      GRAFANA_URL: http://grafana:3000
+      GRAFANA_USERNAME: admin
+      GRAFANA_PASSWORD: admin
+    command: ["-t", "stdio"]
+    depends_on:
+      - grafana
+
 volumes:
   prometheus-data:
   grafana-data:
