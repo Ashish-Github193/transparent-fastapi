@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 from collections.abc import AsyncIterator, Iterable
 from contextlib import asynccontextmanager
+from importlib.metadata import version as _version
 
 from fastapi import FastAPI
 
@@ -11,7 +12,7 @@ from transparent_fastapi import background_tasks, http
 from transparent_fastapi.endpoint import metrics_endpoint
 from transparent_fastapi.event_loop import measure_event_loop_lag
 
-__version__ = "0.1.0"
+__version__ = _version("transparent-fastapi")
 
 __all__ = ["__version__", "install"]
 
