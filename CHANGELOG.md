@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-05-01
+
+### Fixed
+- `transparent_fastapi.__version__` now reads from package metadata via `importlib.metadata`, so it always matches the installed distribution version. Previously hardcoded as `"0.1.0"` and drifted from the published version on each release.
+
 ## [0.1.1] - 2026-05-01
 
 First PyPI release. Identical surface to 0.1.0; this version exercises the automated release pipeline (`v*` tag created by CI, OIDC publish via PyPI Trusted Publishers, GitHub Release with extracted changelog notes). 0.1.0 was set in `pyproject.toml` but never published.
@@ -19,6 +24,7 @@ Initial release.
 - BackgroundTasks instrumentation via an idempotent monkey-patch on `starlette.background.BackgroundTasks.add_task`: `background_task_scheduled_total`, `background_task_total` (mode × outcome), `background_task_duration_seconds`.
 - `py.typed` marker — the package ships type information.
 
-[Unreleased]: https://github.com/Ashish-Github193/transparent-fastapi/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/Ashish-Github193/transparent-fastapi/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/Ashish-Github193/transparent-fastapi/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Ashish-Github193/transparent-fastapi/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Ashish-Github193/transparent-fastapi/releases/tag/v0.1.0

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "transparent-fastapi"
-version = "0.1.1"
+version = "0.1.2"
 description = "Drop-in Prometheus metrics for FastAPI: HTTP requests, latency, event-loop lag, threadpool tokens, background tasks. One line of setup, no per-route changes."
 readme = "README.md"
 license = { text = "MIT" }
