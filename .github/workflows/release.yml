@@ -1,0 +1,135 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+      should-release: ${{ steps.check.outputs.should-release }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+          fetch-tags: true
+
+      - name: Detect version bump
+        id: check
+        run: |
+          read_version() {
+            python3 -c "import tomllib, sys; print(tomllib.load(sys.stdin.buffer)['project']['version'])"
+          }
+          NEW=$(read_version < pyproject.toml)
+          OLD=$(git show HEAD~1:pyproject.toml 2>/dev/null | read_version 2>/dev/null || echo "")
+          echo "old=$OLD new=$NEW"
+          if [ -n "$OLD" ] && [ "$NEW" != "$OLD" ]; then
+            if git rev-parse "v$NEW" >/dev/null 2>&1; then
+              echo "::error::tag v$NEW already exists; refusing to re-release"
+              exit 1
+            fi
+            echo "version=$NEW" >> "$GITHUB_OUTPUT"
+            echo "should-release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should-release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: detect
+    if: needs.detect.outputs.should-release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - run: uv build
+      - run: uvx twine check dist/*
+
+      - name: Install wheel into clean venv and import
+        run: |
+          uv venv /tmp/check
+          uv pip install --python /tmp/check/bin/python dist/*.whl
+          /tmp/check/bin/python -c "import transparent_fastapi; from transparent_fastapi import install; assert transparent_fastapi.__version__, 'no __version__'"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish-pypi:
+    needs: [detect, build]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/transparent-fastapi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  tag-and-release:
+    needs: [detect, publish-pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Tag the release commit
+        env:
+          VERSION: ${{ needs.detect.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: Extract changelog section
+        id: notes
+        env:
+          VERSION: ${{ needs.detect.outputs.version }}
+        run: |
+          NOTES=$(awk -v ver="$VERSION" '
+            /^\[.+\]:/ { if (in_section) exit }
+            /^## \[/ {
+              if (in_section) exit
+              if (index($0, "## [" ver "]") == 1) { in_section = 1; next }
+            }
+            in_section { print }
+          ' CHANGELOG.md)
+          if [ -z "$(printf "%s" "$NOTES" | tr -d '[:space:]')" ]; then
+            echo "::error::no changelog section found for v$VERSION"
+            exit 1
+          fi
+          {
+            echo "body<<EOF"
+            echo "$NOTES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTES: ${{ steps.notes.outputs.body }}
+          VERSION: ${{ needs.detect.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --notes "$NOTES" \
+            dist/*
