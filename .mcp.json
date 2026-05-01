@@ -1,12 +1,26 @@
 {
   "mcpServers": {
-    "grafana": {
+    "grafana-source": {
       "type": "stdio",
       "command": "docker",
       "args": [
         "compose",
         "-f",
-        "deploy/local/docker-compose.yml",
+        "deploy/source/docker-compose.yml",
+        "run",
+        "--rm",
+        "-T",
+        "grafana-mcp"
+      ],
+      "env": {}
+    },
+    "grafana-live": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "compose",
+        "-f",
+        "deploy/live/docker-compose.yml",
         "run",
         "--rm",
         "-T",

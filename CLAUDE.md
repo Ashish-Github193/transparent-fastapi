@@ -12,7 +12,10 @@ The library proper is `src/transparent_fastapi/`. Everything else exists to veri
 |---|---|
 | `src/transparent_fastapi/` | THE LIBRARY — published to PyPI as `transparent-fastapi` |
 | `src/test_server/` | workspace member; demo app baked into the docker image. **NOT shipped** |
-| `deploy/local/` | docker-compose stack (app + Prometheus + Grafana) + helper scripts. Also defines an on-demand `grafana-mcp` service under the `tools` profile, used by `.mcp.json` to give Claude Code Grafana access |
+| `deploy/source/` | docker-compose stack that builds the demo app from the workspace source tree (app + Prometheus + Grafana + helper scripts). The default dev stack. |
+| `deploy/live/` | sibling stack that installs `transparent-fastapi` from PyPI instead of the source tree. Used to verify a published wheel end-to-end against the same observability harness. |
+
+Both stacks define an on-demand `grafana-mcp` service under the `tools` profile, exposed by `.mcp.json` as `grafana-source` and `grafana-live` respectively — Claude Code uses these for stdio access to whichever stack is up.
 | `tests/` | smoke tests guarding the public `install()` contract |
 
 uv workspace — `uv sync` from root installs both packages editable into one `.venv/`.
@@ -26,12 +29,13 @@ uv workspace — `uv sync` from root installs both packages editable into one `.
 ## Quick reference
 
 ```bash
-uv sync                                                          # set up venv
-.venv/bin/pytest                                                 # 6 smoke tests
-docker compose -f deploy/local/docker-compose.yml up -d --build  # demo stack
-deploy/local/scripts/deploy.sh status                            # health-check
-deploy/local/scripts/deploy.sh load-medium                       # locust load (load-high for heavier)
-uv build                                                         # wheel + sdist
+uv sync                                                           # set up venv
+.venv/bin/pytest                                                  # 6 smoke tests
+docker compose -f deploy/source/docker-compose.yml up -d --build  # dev stack (source build)
+deploy/source/scripts/deploy.sh status                            # health-check
+deploy/source/scripts/deploy.sh load-medium                       # locust load (load-high for heavier)
+docker compose -f deploy/live/docker-compose.yml up -d --build    # release verification stack
+uv build                                                          # wheel + sdist
 ```
 
 ## Already considered, rejected
@@ -39,8 +43,8 @@ uv build                                                         # wheel + sdist
 Don't reintroduce these — each was tried and removed for stated reasons:
 
 - **`examples/` folder.** Demo code lives in `src/test_server/app.py`. The README handles documentation snippets.
-- **`docker/` folder.** Dockerfiles live next to what they build — currently only `src/test_server/Dockerfile`.
-- **Root-level wrapper scripts** (`local.sh`, `dev.sh`, etc.). `docker compose -f deploy/local/docker-compose.yml ...` works from the project root unchanged because compose paths anchor to the compose file's directory, not cwd. A wrapper hides this fact rather than solving anything. See `deploy/local/CLAUDE.md` for the path semantics.
+- **`docker/` folder.** Dockerfiles live next to what they build — currently only `src/test_server/Dockerfile`, a multi-stage file with two targets (`source-build` and `live-build`) selected by the consuming compose file (`deploy/source/` and `deploy/live/` respectively).
+- **Root-level wrapper scripts** (`local.sh`, `dev.sh`, etc.). `docker compose -f deploy/source/docker-compose.yml ...` works from the project root unchanged because compose paths anchor to the compose file's directory, not cwd. A wrapper hides this fact rather than solving anything. See `deploy/source/CLAUDE.md` for the path semantics.
 
 ## Python versions
 
@@ -102,6 +106,8 @@ The release is fully driven by a version-field bump on `master`. No manual taggi
 **Step 3 — approve the publish.** The workflow then **pauses on the `pypi` environment** waiting for required-reviewer approval. Go to the **Actions tab → the running "Release" workflow → "Review deployments" → check `pypi` → "Approve and deploy"**. This click is the safety belt against an accidental version-field bump becoming an immutable PyPI publish — don't disable it.
 
 **Step 4 — workflow finishes the rest automatically.** After approval it publishes via OIDC, tags the release commit `vX.Y.Z`, and creates a GitHub Release with the changelog section as body and the wheel + sdist attached.
+
+**Step 5 (optional) — verify the published wheel end-to-end.** Bump the default `TFA_VERSION` in `src/test_server/Dockerfile` (the `live-build` stage) and `deploy/live/docker-compose.yml` to the new version (the release-PR diff that flips `[Unreleased]` should also touch these), then `TFA_VERSION=X.Y.Z deploy/live/scripts/deploy.sh up`. Same dashboards as the regular dev stack, but the `app` container installs from PyPI. See `deploy/live/CLAUDE.md` for details.
 
 ### One-time setup before the first release works
 

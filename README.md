@@ -136,15 +136,20 @@ time() - process_start_time_seconds
 
 ## Local demo stack
 
-The repo ships a docker-compose stack (app + Prometheus + Grafana with a provisioned dashboard) and locust load profiles under `deploy/local/`. From the project root:
+The repo ships a docker-compose stack (app + Prometheus + Grafana with a provisioned dashboard) and locust load profiles under `deploy/source/`.
+
+![Dashboard — overview, runtime, HTTP requests](screenshots/screenshot-1.png)
+![Dashboard — latency percentiles, background tasks](screenshots/screenshot-2.png)
+
+From the project root:
 
 ```bash
-docker compose -f deploy/local/docker-compose.yml up -d --build
-deploy/local/scripts/deploy.sh status        # curl all three services
-deploy/local/scripts/deploy.sh load-medium   # locust, realistic traffic mix
+docker compose -f deploy/source/docker-compose.yml up -d --build
+deploy/source/scripts/deploy.sh status        # curl all three services
+deploy/source/scripts/deploy.sh load-medium   # locust, realistic traffic mix
 ```
 
-Grafana lands on <http://localhost:3000> (admin/admin) with `transparent-fastapi` as the default dashboard. See `deploy/local/CLAUDE.md` for the full reference.
+Grafana lands on <http://localhost:3000> (admin/admin) with `transparent-fastapi` as the default dashboard. The dashboard exposes a `Datasource` template variable, so [the JSON](deploy/live/configs/grafana/provisioning/dashboards/transparent-fastapi.json) drops cleanly into any Grafana with a Prometheus datasource — not just this stack. See `deploy/source/CLAUDE.md` for the full reference.
 
 ## License
 

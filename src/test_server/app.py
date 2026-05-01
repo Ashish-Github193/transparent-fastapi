@@ -1,6 +1,6 @@
 """Demo FastAPI app baked into the docker image for the local stack.
 
-It exists so deploy/local has something to scrape. The /sleep-async and
+It exists so deploy/source has something to scrape. The /sleep-async and
 /sleep-sync routes are the headline demo: same handler shape, one yields to
 the event loop and one blocks it — visible in event_loop_lag_seconds and
 http_request_duration_seconds under load.
