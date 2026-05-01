@@ -75,21 +75,21 @@ Every PR that changes user-visible behavior adds a line under `## [Unreleased]` 
 
 ### Cutting a release
 
-Ritual is four edits + a tag. The `release.yml` workflow does the rest.
+The release is fully driven by a version bump on `master`. No manual tagging.
 
-1. On `master` (via PR — branch protection requires it), edit `CHANGELOG.md`:
+Open a PR that does exactly two things:
+
+1. Edit `CHANGELOG.md`:
    - rename `## [Unreleased]` → `## [X.Y.Z] - YYYY-MM-DD`
    - add a fresh empty `## [Unreleased]` above it
    - update the link refs at the bottom: bump `[Unreleased]: .../compare/vX.Y.Z...HEAD` and add `[X.Y.Z]: .../releases/tag/vX.Y.Z`
 2. Bump `version = "X.Y.Z"` in `pyproject.toml`.
-3. Merge the release PR.
-4. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 
-The tag push triggers `.github/workflows/release.yml`, which builds, verifies tag-vs-pyproject version match, publishes to PyPI via Trusted Publishers (OIDC, no token), and creates a GitHub Release with the changelog section as body.
+Merge the PR. `.github/workflows/release.yml` triggers on `push` to `master`, detects the version-field change vs the previous commit, builds, refuses to proceed if `vX.Y.Z` already exists as a tag, then waits for **manual approval on the `pypi` environment** before publishing. After publish it tags the release commit `vX.Y.Z` and creates a GitHub Release with the changelog section as body.
 
-### One-time PyPI setup
+The environment-reviewer gate is the safety against an accidental version-field bump becoming a real PyPI publish — PyPI publishes are immutable, so don't disable it.
 
-Trusted Publishers must be configured on PyPI before the first release works:
+### One-time setup before the first release works
 
-- PyPI → project → Publishing → add a GitHub publisher with `owner = Ashish-Github193`, `repository = transparent-fastapi`, `workflow = release.yml`, `environment = pypi`.
-- GitHub → repo Settings → Environments → create `pypi` (optionally with required reviewers as a manual gate before publishing).
+- **PyPI** → project → Publishing → add a GitHub publisher: `owner = Ashish-Github193`, `repository = transparent-fastapi`, `workflow = release.yml`, `environment = pypi`.
+- **GitHub** → repo Settings → Environments → create `pypi` and add yourself as a **required reviewer**. This is the manual gate that approves each publish.

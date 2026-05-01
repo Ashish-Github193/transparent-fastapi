@@ -2,14 +2,46 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [master]
 
 permissions:
   contents: read
 
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+      should-release: ${{ steps.check.outputs.should-release }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+          fetch-tags: true
+
+      - name: Detect version bump
+        id: check
+        run: |
+          read_version() {
+            python3 -c "import tomllib, sys; print(tomllib.load(sys.stdin.buffer)['project']['version'])"
+          }
+          NEW=$(read_version < pyproject.toml)
+          OLD=$(git show HEAD~1:pyproject.toml 2>/dev/null | read_version 2>/dev/null || echo "")
+          echo "old=$OLD new=$NEW"
+          if [ -n "$OLD" ] && [ "$NEW" != "$OLD" ]; then
+            if git rev-parse "v$NEW" >/dev/null 2>&1; then
+              echo "::error::tag v$NEW already exists; refusing to re-release"
+              exit 1
+            fi
+            echo "version=$NEW" >> "$GITHUB_OUTPUT"
+            echo "should-release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should-release=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: detect
+    if: needs.detect.outputs.should-release == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -17,15 +49,6 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-
-      - name: Verify tag matches pyproject version
-        run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
-          PKG_VERSION=$(uv run --no-sync python -c "import tomllib, pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
-          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "::error::tag v$TAG_VERSION does not match pyproject version $PKG_VERSION"
-            exit 1
-          fi
 
       - run: uv build
       - run: uvx twine check dist/*
@@ -42,7 +65,7 @@ jobs:
           path: dist/
 
   publish-pypi:
-    needs: build
+    needs: [detect, build]
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -56,8 +79,8 @@ jobs:
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
 
-  github-release:
-    needs: publish-pypi
+  tag-and-release:
+    needs: [detect, publish-pypi]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -68,11 +91,18 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Extract changelog section for this version
+      - name: Tag the release commit
+        run: |
+          VERSION="${{ needs.detect.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: Extract changelog section
         id: notes
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          # Pull lines between `## [VERSION]` and the next `## [` heading.
+          VERSION="${{ needs.detect.outputs.version }}"
           NOTES=$(awk -v ver="$VERSION" '
             /^\[.+\]:/ { if (in_section) exit }
             /^## \[/ {
@@ -95,8 +125,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          gh release create "$TAG" \
-            --title "$TAG" \
+          VERSION="${{ needs.detect.outputs.version }}"
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
             --notes "${{ steps.notes.outputs.body }}" \
             dist/*
