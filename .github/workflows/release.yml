@@ -92,8 +92,9 @@ jobs:
           path: dist/
 
       - name: Tag the release commit
+        env:
+          VERSION: ${{ needs.detect.outputs.version }}
         run: |
-          VERSION="${{ needs.detect.outputs.version }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "v$VERSION" -m "Release v$VERSION"
@@ -101,8 +102,9 @@ jobs:
 
       - name: Extract changelog section
         id: notes
+        env:
+          VERSION: ${{ needs.detect.outputs.version }}
         run: |
-          VERSION="${{ needs.detect.outputs.version }}"
           NOTES=$(awk -v ver="$VERSION" '
             /^\[.+\]:/ { if (in_section) exit }
             /^## \[/ {
@@ -124,9 +126,10 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          NOTES: ${{ steps.notes.outputs.body }}
+          VERSION: ${{ needs.detect.outputs.version }}
         run: |
-          VERSION="${{ needs.detect.outputs.version }}"
           gh release create "v$VERSION" \
             --title "v$VERSION" \
-            --notes "${{ steps.notes.outputs.body }}" \
+            --notes "$NOTES" \
             dist/*
