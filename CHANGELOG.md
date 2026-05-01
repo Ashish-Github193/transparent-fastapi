@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-01
+
+First PyPI release. Identical surface to 0.1.0; this version exercises the automated release pipeline (`v*` tag created by CI, OIDC publish via PyPI Trusted Publishers, GitHub Release with extracted changelog notes). 0.1.0 was set in `pyproject.toml` but never published.
+
 ## [0.1.0] - 2026-04-30
 
 Initial release.
@@ -15,5 +19,6 @@ Initial release.
 - BackgroundTasks instrumentation via an idempotent monkey-patch on `starlette.background.BackgroundTasks.add_task`: `background_task_scheduled_total`, `background_task_total` (mode × outcome), `background_task_duration_seconds`.
 - `py.typed` marker — the package ships type information.
 
-[Unreleased]: https://github.com/Ashish-Github193/transparent-fastapi/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Ashish-Github193/transparent-fastapi/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Ashish-Github193/transparent-fastapi/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Ashish-Github193/transparent-fastapi/releases/tag/v0.1.0
