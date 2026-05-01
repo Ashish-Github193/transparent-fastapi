@@ -69,25 +69,39 @@ Anchored to "Don't break these" above:
   - bug fixes that don't change metric output
   - perf, refactor, doc, CI, test changes
 
-### Per-PR changelog discipline
+### Two PR shapes
+
+Releases are driven entirely by which PR shape merges. Most PRs are the first kind; release PRs are occasional.
+
+| | Feature/fix PR (common) | Release PR (occasional) |
+|---|---|---|
+| Bumps `pyproject.toml` version? | no | yes |
+| Touches `CHANGELOG.md`? | adds a line under `## [Unreleased]` | flips `[Unreleased]` → `[X.Y.Z]` and adds a fresh empty `[Unreleased]` |
+| What happens on merge? | nothing publishes — `release.yml` sees no version-field change and no-ops | `release.yml` runs, pauses on the `pypi` environment for your approval, then publishes |
+
+A release PR can be the same PR as a feature when shipping a one-feature release — that's a choice, not the default. The default is: ship features under `[Unreleased]` until enough has accumulated, then open a small dedicated release PR.
+
+### Per-PR changelog discipline (feature/fix PRs)
 
 Every PR that changes user-visible behavior adds a line under `## [Unreleased]` in `CHANGELOG.md`, in the right section (`Added` / `Changed` / `Deprecated` / `Removed` / `Fixed` / `Security`). Pure CI/refactor/docs PRs don't need an entry.
 
-### Cutting a release
+### Cutting a release (release PRs)
 
-The release is fully driven by a version bump on `master`. No manual tagging.
+The release is fully driven by a version-field bump on `master`. No manual tagging.
 
-Open a PR that does exactly two things:
+**Step 1 — open the release PR.** Two edits, nothing else:
 
-1. Edit `CHANGELOG.md`:
+1. `CHANGELOG.md`:
    - rename `## [Unreleased]` → `## [X.Y.Z] - YYYY-MM-DD`
    - add a fresh empty `## [Unreleased]` above it
    - update the link refs at the bottom: bump `[Unreleased]: .../compare/vX.Y.Z...HEAD` and add `[X.Y.Z]: .../releases/tag/vX.Y.Z`
-2. Bump `version = "X.Y.Z"` in `pyproject.toml`.
+2. `pyproject.toml`: bump `version = "X.Y.Z"`.
 
-Merge the PR. `.github/workflows/release.yml` triggers on `push` to `master`, detects the version-field change vs the previous commit, builds, refuses to proceed if `vX.Y.Z` already exists as a tag, then waits for **manual approval on the `pypi` environment** before publishing. After publish it tags the release commit `vX.Y.Z` and creates a GitHub Release with the changelog section as body.
+**Step 2 — merge the PR.** `ci.yml` runs on the PR as usual. After merge, `release.yml` triggers on `push: master`, detects the version-field change vs the previous commit, builds + smoke-tests the wheel, and refuses to proceed if `vX.Y.Z` already exists as a tag.
 
-The environment-reviewer gate is the safety against an accidental version-field bump becoming a real PyPI publish — PyPI publishes are immutable, so don't disable it.
+**Step 3 — approve the publish.** The workflow then **pauses on the `pypi` environment** waiting for required-reviewer approval. Go to the **Actions tab → the running "Release" workflow → "Review deployments" → check `pypi` → "Approve and deploy"**. This click is the safety belt against an accidental version-field bump becoming an immutable PyPI publish — don't disable it.
+
+**Step 4 — workflow finishes the rest automatically.** After approval it publishes via OIDC, tags the release commit `vX.Y.Z`, and creates a GitHub Release with the changelog section as body and the wheel + sdist attached.
 
 ### One-time setup before the first release works
 
