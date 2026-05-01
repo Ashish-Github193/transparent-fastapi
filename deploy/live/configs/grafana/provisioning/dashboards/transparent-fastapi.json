@@ -4,7 +4,7 @@
   "panels": [
     {"collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0}, "id": 1, "panels": [], "title": "Overview", "type": "row"},
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "decimals": 2, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}, "unit": "reqps"}, "overrides": []},
       "gridPos": {"h": 4, "w": 6, "x": 0, "y": 1},
       "id": 2,
@@ -14,7 +14,7 @@
       "type": "stat"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "decimals": 2, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.01}, {"color": "red", "value": 0.05}]}, "unit": "percentunit"}, "overrides": []},
       "gridPos": {"h": 4, "w": 6, "x": 6, "y": 1},
       "id": 3,
@@ -24,7 +24,7 @@
       "type": "stat"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "decimals": 3, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.5}, {"color": "red", "value": 2}]}, "unit": "s"}, "overrides": []},
       "gridPos": {"h": 4, "w": 6, "x": 12, "y": 1},
       "id": 4,
@@ -34,7 +34,7 @@
       "type": "stat"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "decimals": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}, "unit": "short"}, "overrides": []},
       "gridPos": {"h": 4, "w": 6, "x": 18, "y": 1},
       "id": 5,
@@ -45,7 +45,7 @@
     },
     {"collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 5}, "id": 11, "panels": [], "title": "Runtime", "type": "row"},
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "description": "Delta between expected and actual wake-up of a 1s sleep on the loop. Sustained high values indicate the loop is being blocked by sync work.",
       "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "custom": {"drawStyle": "line", "fillOpacity": 15, "lineInterpolation": "linear", "showPoints": "never"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.05}, {"color": "red", "value": 0.1}]}, "unit": "s"}, "overrides": []},
       "gridPos": {"h": 8, "w": 8, "x": 0, "y": 6},
@@ -56,7 +56,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "description": "anyio default thread limiter. 'borrowed' approaching 'total' indicates saturation.",
       "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "linear", "showPoints": "never"}, "unit": "short"}, "overrides": [
         {"matcher": {"id": "byName", "options": "borrowed"}, "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]},
@@ -71,7 +71,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "description": "Tasks queued waiting to acquire a threadpool token. Non-zero means saturation.",
       "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "custom": {"drawStyle": "line", "fillOpacity": 15, "lineInterpolation": "linear", "showPoints": "never"}, "decimals": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}, "unit": "short"}, "overrides": []},
       "gridPos": {"h": 8, "w": 8, "x": 16, "y": 6},
@@ -83,7 +83,7 @@
     },
     {"collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 14}, "id": 18, "panels": [], "title": "Runtime (prom — auto-registered by prometheus_client)", "type": "row"},
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "description": "Process CPU consumption. 1.0 = one full core; >1.0 means multiple cores busy (only possible with multi-process workers).",
       "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 15, "lineInterpolation": "linear", "showPoints": "never"}, "unit": "percentunit", "decimals": 2}, "overrides": []},
       "gridPos": {"h": 8, "w": 6, "x": 0, "y": 15},
@@ -94,7 +94,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "description": "Resident set size — physical memory the process is currently using.",
       "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 15, "lineInterpolation": "linear", "showPoints": "never"}, "unit": "bytes"}, "overrides": []},
       "gridPos": {"h": 8, "w": 6, "x": 6, "y": 15},
@@ -105,7 +105,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "description": "Open file descriptors vs the soft limit (max). FDs creeping toward max suggests a leak — sockets, files, or epoll handles not being closed.",
       "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "linear", "showPoints": "never"}, "unit": "short", "decimals": 0}, "overrides": [{"matcher": {"id": "byName", "options": "max"}, "properties": [{"id": "color", "value": {"fixedColor": "blue", "mode": "fixed"}}, {"id": "custom.lineStyle", "value": {"dash": [10, 10], "fill": "dash"}}]}, {"matcher": {"id": "byName", "options": "open"}, "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]}]},
       "gridPos": {"h": 8, "w": 6, "x": 12, "y": 15},
@@ -119,7 +119,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "description": "Python GC collections per second by generation. Sustained gen-2 activity indicates long-lived object churn — usually a sign of memory pressure.",
       "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "linear", "showPoints": "never"}, "unit": "ops"}, "overrides": []},
       "gridPos": {"h": 8, "w": 6, "x": 18, "y": 15},
@@ -131,7 +131,7 @@
     },
     {"collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 23}, "id": 6, "panels": [], "title": "HTTP requests", "type": "row"},
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 15, "lineInterpolation": "linear", "showPoints": "never", "stacking": {"mode": "normal"}}, "unit": "reqps"}, "overrides": []},
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
       "id": 7,
@@ -141,7 +141,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 15, "lineInterpolation": "linear", "showPoints": "never", "stacking": {"mode": "normal"}}, "unit": "reqps"}, "overrides": [
         {"matcher": {"id": "byRegexp", "options": "^2.."}, "properties": [{"id": "color", "value": {"fixedColor": "green", "mode": "fixed"}}]},
         {"matcher": {"id": "byRegexp", "options": "^3.."}, "properties": [{"id": "color", "value": {"fixedColor": "blue", "mode": "fixed"}}]},
@@ -156,7 +156,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 0, "lineInterpolation": "linear", "showPoints": "never"}, "unit": "s"}, "overrides": []},
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32},
       "id": 9,
@@ -170,7 +170,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "fieldConfig": {"defaults": {"displayName": "requests/sec", "unit": "reqps"}, "overrides": []},
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
       "id": 10,
@@ -181,7 +181,7 @@
     },
     {"collapsed": false, "gridPos": {"h": 1, "w": 24, "x": 0, "y": 40}, "id": 15, "panels": [], "title": "Background tasks", "type": "row"},
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "description": "Lazy: appears once add_task is called. Mode = async or threadpool; outcome = ok or error.",
       "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 15, "lineInterpolation": "linear", "showPoints": "never", "stacking": {"mode": "normal"}}, "unit": "ops"}, "overrides": [
         {"matcher": {"id": "byRegexp", "options": ".*/ error$"}, "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]}
@@ -194,7 +194,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 0, "lineInterpolation": "linear", "showPoints": "never"}, "unit": "s"}, "overrides": []},
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 41},
       "id": 17,
@@ -208,7 +208,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "description": "Two lines: how fast tasks are being scheduled (add_task calls) vs. how fast they're completing. The gap = backlog growth rate. If 'scheduled' stays above 'completed', you're falling behind and the queue is unbounded.",
       "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "linear", "showPoints": "never", "lineWidth": 2}, "unit": "ops"}, "overrides": [{"matcher": {"id": "byName", "options": "scheduled"}, "properties": [{"id": "color", "value": {"fixedColor": "orange", "mode": "fixed"}}]}, {"matcher": {"id": "byName", "options": "completed"}, "properties": [{"id": "color", "value": {"fixedColor": "green", "mode": "fixed"}}]}]},
       "gridPos": {"h": 6, "w": 24, "x": 0, "y": 49},
@@ -227,8 +227,22 @@
   "tags": ["fastapi", "transparent-fastapi"],
   "templating": {"list": [
     {
+      "current": {},
+      "hide": 0,
+      "includeAll": false,
+      "label": "Datasource",
+      "multi": false,
+      "name": "datasource",
+      "options": [],
+      "query": "prometheus",
+      "refresh": 1,
+      "regex": "",
+      "skipUrlSync": false,
+      "type": "datasource"
+    },
+    {
       "current": {"selected": false, "text": "All", "value": "$__all"},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "includeAll": true,
       "label": "job",
       "multi": true,
@@ -240,7 +254,7 @@
     },
     {
       "current": {"selected": false, "text": "All", "value": "$__all"},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "includeAll": true,
       "label": "route",
       "multi": true,

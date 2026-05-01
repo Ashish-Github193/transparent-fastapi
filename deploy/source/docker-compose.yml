@@ -5,6 +5,7 @@ services:
     build:
       context: ../..
       dockerfile: src/test_server/Dockerfile
+      target: source-build
     container_name: tfa-app
     ports:
       - "${APP_PORT:-8000}:8000"
